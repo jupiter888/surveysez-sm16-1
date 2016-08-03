@@ -46,8 +46,16 @@ $mySurvey = new Survey($myID);
 
 
 
-//use this if there is a problem, to see objects
+//use this if there is a problem, use this to see objects
+dumpDie($mySurvey);
 //dumpDie($mySurvey);
+//dumpDie($mySurvey);
+//dumpDie($mySurvey);
+//dumpDie($mySurvey);
+//dumpDie($mySurvey);
+//dumpDie($mySurvey);
+
+
 
 # END CONFIG AREA ---------------------------------------------------------- 
 
@@ -75,6 +83,7 @@ class Survey
     public $Description='';
     public $SurveyID=0;
     public $isValid= false;
+public $Questions=array();
     
 
     
@@ -93,7 +102,48 @@ class Survey
           $id= (int)$id;
           $sql = "select * from sm16_surveys where SurveyID = " . $id;
            
-        $result = mysqli_query(IDB::conn(),$sql) or die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+        $result = mysqli_query(IDB::conn(),$sql) or  die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
+
+        if(mysqli_num_rows($result) > 0)
+            {  #records exist - process
+               //$this->SurveyID= $id;
+               //$this->isValid = true;	
+                    while ($row = mysqli_fetch_assoc($result))
+                        {   
+                            $this->Title = dbOut($row['Title']); 
+                            //row is associative array, also a complex object
+			                $this->Description = dbOut($row['Description']);
+                        
+                           
+                            
+                        }
+            }
+
+         @mysqli_free_result($result); # We're done with the data!
+         #this releases the data on the server side. 
+        
+        
+        
+        
+       
+//**********************************************       
+     //start of question work
+         //reusing the sql code below
+        
+      /*
+      select q.QuestionID, q.Question from sm16_questions q inner join sm16_surveys s on s.SurveyID = q.SurveyID where s.SurveyID = 1
+      */
+  
+        
+        //copy the original line, and paste below, then comment out original line
+        // $sql = "select * from sm16_surveys where SurveyID = " . $id;
+        // $sql = "  " . $id;
+        $sql = "  select q.QuestionID, q.Question, q.Description from sm16_questions q inner join sm16_surveys s on s.SurveyID = q.SurveyID where s.SurveyID = " . $id;
+
+        
+        
+        
+        $result = mysqli_query(IDB::conn(),$sql) or  die(trigger_error(mysqli_error(IDB::conn()), E_USER_ERROR));
 
         if(mysqli_num_rows($result) > 0)
             {
@@ -102,24 +152,51 @@ class Survey
                $this->isValid = true;	
                     while ($row = mysqli_fetch_assoc($result))
                         {   //make the ice cream data
-                            $this->Title = dbOut($row['Title']);
-			                $this->Description = dbOut($row['Description']);
+                            //this next commented line is for processing data
+                        
+                            //$this->Title = dbOut($row['Title']);   
+                            //$this->Description = dbOut($row['Description']);
+                $this->Questions[]= new Question($row['QuestionID'],dbOut($row['Question']),dbOut($row['Description']) );
+                        
+			            
                         }
             }
 
          @mysqli_free_result($result); # We're done with the data!
+         #this releases the data on the server side.      
+ 
+//********************************************** //********************************************** //********************************************** //********************************************** //********************************************** //********************************************** 
+        
+        
+        
+//end of question work  
+//**********************************************        
+      }#end survey constructor
+}#end Survey class
 
+class Question
+{
+ 
+    public $QuestionID= 0;
+    public $Text=''; #this would be question,
+    #but we dont want to have a string
+    #named question inside the Question class, 
+    #would end up being question.question...too similar//
+    
+    #questions are a cluster of items, the Survey is created and it creates its own     #questions, so the code will be in the constructor in Survey
+    public $Description ='';    
+    
+    public function __constructor($QuestionID,$Text,$Description) 
+    {
+        $this->QuestionID =$QuestionID;
+        $this->Text =$Text;
+        $this->Description =$Description;
         
-        
-        
-        
-        
-        
-        
-        
-        
-        }#end survey constructor
-}
+    } //end Question Constructor
+    
+    
+    
+}//end Question class
 
 
 
